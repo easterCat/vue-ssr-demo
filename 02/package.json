@@ -1,0 +1,19 @@
+{
+  "name": "01",
+  "version": "1.0.0",
+  "description": "``` npm install vue vue-server-renderer --save ```",
+  "main": "index.js",
+  "scripts": {
+    "ssr": "nodemon ssr.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "vue": "^2.6.10",
+    "vue-server-renderer": "^2.6.10"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.2"
+  }
+}
