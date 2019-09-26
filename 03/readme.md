@@ -8,8 +8,8 @@
 
 优点
 
-- 更好的 SEO,由于搜索引擎爬虫抓取工具可以直接查看完全渲染的页面.如果 SEO 对你的站点至关重要,而你的页面又是异步获取内容,则你可能需要服务器端渲染(SSR)解决此问题.
-- 更快的首屏渲染,特别是对于缓慢的网络情况或运行缓慢的设备.无需等待所有的 JavaScript 都完成下载并执行,才显示服务器渲染的标记,所以你的用户将会更快速地看到完整渲染的页面.
+- 更好的 SEO,SSR 不同于 SPA 的 HTML 只有一个无实际内容的 HTML 和一个 app.js，SSR 生成的 HTML 是有内容的.由于搜索引擎爬虫抓取工具可以直接查看完全渲染的页面.如果 SEO 对你的站点至关重要,而你的页面又是异步获取内容,则你可能需要服务器端渲染(SSR)解决此问题.
+- 更快的首屏渲染,特别是对于缓慢的网络情况或运行缓慢的设备.SSR 直接将 HTML 字符串传递给浏览器,无需等待所有的 JavaScript 都完成下载并执行,才显示服务器渲染的标记,所以你的用户将会更快速地看到完整渲染的页面.
 
 缺点
 
@@ -194,7 +194,7 @@ scripts": {
 
 ### 添加 webpack 构建应用
 
-我们需要使用 webpack 来打包我们的 Vue 应用程序。对于客户端应用程序和服务器应用程序，我们都要使用 webpack 打包 - 服务器需要「服务器 bundle」然后用于服务器端渲染(SSR)，而「客户端 bundle」会发送给浏览器，用于混合静态标记。
+我们需要使用 webpack 来打包我们的 Vue 应用程序.对于客户端应用程序和服务器应用程序，我们都要使用 webpack 打包 - 服务器需要「服务器 bundle」然后用于服务器端渲染(SSR)，而「客户端 bundle」会发送给浏览器，用于混合静态标记.
 
 ![构建流程](https://cloud.githubusercontent.com/assets/499550/17607895/786a415a-5fee-11e6-9c11-45a2cfdf085c.png)
 
@@ -212,7 +212,7 @@ src
 └── entry-server.js # 仅运行于服务器
 ```
 
-- app.js 在纯客户端应用程序中，我们将在此文件中创建根 Vue 实例，并直接挂载到 DOM。但是，对于服务器端渲染(SSR)，责任转移到纯客户端 entry 文件。简单地使用 export 导出一个 createApp 函数
+- app.js 在纯客户端应用程序中，我们将在此文件中创建根 Vue 实例，并直接挂载到 DOM.但是，对于服务器端渲染(SSR)，责任转移到纯客户端 entry 文件.简单地使用 export 导出一个 createApp 函数
 
 ```
 import Vue from 'vue'
@@ -222,7 +222,7 @@ import App from './App.vue'
 // 应用程序、router 和 store 实例
 export function createApp () {
   const app = new Vue({
-    // 根实例简单的渲染应用程序组件。
+    // 根实例简单的渲染应用程序组件.
     render: h => h(App)
   })
   return { app }
@@ -242,7 +242,7 @@ const { app } = createApp()
 app.$mount('#app')
 ```
 
-- entry-server.js 服务器 entry 使用 default export 导出函数，并在每次渲染中重复调用此函数。
+- entry-server.js 服务器 entry 使用 default export 导出函数，并在每次渲染中重复调用此函数.
 
 ```
 import { createApp } from './app'
@@ -303,7 +303,7 @@ export function createApp() {
   const router = createRouter();
 
   const app = new Vue({
-    // 根实例简单的渲染应用程序组件。
+    // 根实例简单的渲染应用程序组件.
     router,
     render: h => h(App)
   });
@@ -319,7 +319,7 @@ import { createApp } from './app'
 export default context => {
   // 因为有可能会是异步路由钩子函数或组件，所以我们将返回一个 Promise，
     // 以便服务器能够等待所有的内容在渲染前，
-    // 就已经准备就绪。
+    // 就已经准备就绪.
   return new Promise((resolve, reject) => {
     const { app, router } = createApp()
 
@@ -354,6 +354,8 @@ router.onReady(() => {
 ```
 
 #### 添加 vuex
+
+客户端，在挂载到客户端应用程序之前，需要获取到与服务器端应用程序完全相同的数据. 否则，客户端应用程序会因为使用与服务器端应用程序不同的状态，然后导致混合失败.为了解决这个问题，获取的数据需要位于视图组件之外，即放置在专门的数据预取存储容器(data store)或"状态容器(state container)）"中.
 
 新建 03/src/store/index.js
 
@@ -414,7 +416,7 @@ export function createApp() {
   sync(store, router);
 
   const app = new Vue({
-    // 根实例简单的渲染应用程序组件。
+    // 根实例简单的渲染应用程序组件.
     router,
     store,
     render: h => h(App)
@@ -422,6 +424,8 @@ export function createApp() {
   return { app, router, store };
 }
 ```
+
+通过访问路由,来决定那些组件需要获取数据并渲染.给予路由的数据,也就是该路由所绑定的组件需要的数据.我们在路由组件上暴露出一个自定义静态函数 asyncData,此函数会在组件实例化之前调用，所以它无法访问 this,需要将 store 和路由信息作为参数传递进去
 
 引入 store 的组件 03/src/components/Hello.vue
 
@@ -530,10 +534,10 @@ export default context => {
         }
       })).then(() => {
         // 在所有预取钩子(preFetch hook) resolve 后，
-        // 我们的 store 现在已经填充入渲染应用程序所需的状态。
+        // 我们的 store 现在已经填充入渲染应用程序所需的状态.
         // 当我们将状态附加到上下文，
         // 并且 `template` 选项用于 renderer 时，
-        // 状态将自动序列化为 `window.__INITIAL_STATE__`，并注入 HTML。
+        // 状态将自动序列化为 `window.__INITIAL_STATE__`，并注入 HTML.
         context.state = store.state
 
         //Promise 应该 resolve 应用程序实例，以便它可以渲染
